@@ -1,0 +1,409 @@
+/* Quantitative Financial Risk Engine — shared styles */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400..600&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+
+:root {
+  --ink: #eae6dc;
+  --ink-dim: #a7a196;
+  --ink-faint: #6f6a60;
+  --bg: #12130f;
+  --bg-raised: #171813;
+  --bg-card: #1b1c16;
+  --line: #33342b;
+  --amber: #e0954a;
+  --amber-dim: #8a6438;
+  --sage: #6fae8c;
+  --coral: #d16b5c;
+  --max-w: 1080px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* film grain, fixed, decorative only */
+.grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.glow {
+  position: fixed;
+  top: -20%;
+  right: -10%;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, rgba(224, 149, 74, 0.10), transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+a { color: var(--amber); text-decoration: none; border-bottom: 1px solid var(--amber-dim); }
+a:hover { color: #f2ab68; border-bottom-color: #f2ab68; }
+
+h1, h2, h3 {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--amber);
+  font-weight: 500;
+}
+
+.wrap {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 28px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- header ---------- */
+header.top {
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+}
+header.top .wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.brand {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+}
+.brand span { color: var(--amber); }
+.course-tag {
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.04em;
+}
+
+/* ---------- hero ---------- */
+.hero {
+  padding: 96px 0 64px;
+  position: relative;
+}
+.hero .eyebrow { margin-bottom: 22px; display: block; }
+.hero h1 {
+  font-size: clamp(2.4rem, 5.6vw, 4.1rem);
+  line-height: 1.05;
+  max-width: 15ch;
+  letter-spacing: -0.01em;
+}
+.hero h1 em {
+  font-style: italic;
+  color: var(--amber);
+}
+.hero .dek {
+  margin: 28px 0 0;
+  max-width: 58ch;
+  color: var(--ink-dim);
+  font-size: 1.02rem;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin-top: 56px;
+}
+.stat {
+  background: var(--bg-raised);
+  padding: 22px 24px;
+}
+.stat .k {
+  font-family: 'Fraunces', serif;
+  font-size: 2.1rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+.stat .k small { font-size: 1rem; color: var(--ink-faint); font-family: 'IBM Plex Mono', monospace; }
+.stat .l {
+  margin-top: 6px;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* ---------- generic section ---------- */
+section { padding: 64px 0; border-top: 1px solid var(--line); }
+section .eyebrow { margin-bottom: 14px; display: block; }
+section h2 {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  max-width: 22ch;
+}
+.lede {
+  margin-top: 18px;
+  max-width: 66ch;
+  color: var(--ink-dim);
+}
+.lede + .lede { margin-top: 12px; }
+
+/* ---------- two column ---------- */
+.split {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 48px;
+  margin-top: 40px;
+  align-items: start;
+}
+@media (max-width: 800px) {
+  .split { grid-template-columns: 1fr; }
+  .stat-row { grid-template-columns: 1fr; }
+}
+
+.formula-card {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  padding: 22px 24px;
+  border-radius: 3px;
+}
+.formula-card + .formula-card { margin-top: 16px; }
+.formula-card .tag {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sage);
+  margin-bottom: 10px;
+  display: block;
+}
+.formula-card .f {
+  font-size: 1.05rem;
+  color: var(--ink);
+  overflow-x: auto;
+}
+.formula-card p {
+  margin: 10px 0 0;
+  color: var(--ink-faint);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+/* ---------- results table ---------- */
+.var-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 40px;
+  font-size: 0.92rem;
+}
+.var-table caption {
+  text-align: left;
+  color: var(--ink-faint);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.var-table th, .var-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+}
+.var-table th:first-child, .var-table td:first-child { text-align: left; }
+.var-table thead th {
+  color: var(--ink-faint);
+  font-weight: 400;
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+}
+.var-table tbody td { color: var(--ink); }
+.var-table .best { color: var(--sage); }
+.var-table .worst { color: var(--coral); }
+.var-table tr:last-child td { border-bottom: none; }
+
+.ks-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+.ks-card {
+  border: 1px solid var(--line);
+  padding: 18px 20px;
+  background: var(--bg-card);
+}
+.ks-card .dist { font-family: 'Fraunces', serif; font-size: 1.1rem; }
+.ks-card .verdict { font-size: 0.78rem; margin-top: 8px; letter-spacing: 0.02em; }
+.ks-card.fail .verdict { color: var(--coral); }
+.ks-card.pass .verdict { color: var(--sage); }
+.ks-card .stat-line { margin-top: 10px; color: var(--ink-dim); font-size: 0.86rem; }
+@media (max-width: 640px) { .ks-row { grid-template-columns: 1fr; } }
+
+/* ---------- plot ---------- */
+figure.plot {
+  margin: 44px 0 0;
+  border: 1px solid var(--line);
+  background: var(--bg-card);
+  padding: 4px;
+}
+figure.plot img { width: 100%; display: block; }
+figure.plot figcaption {
+  padding: 16px 18px 18px;
+  font-size: 0.84rem;
+  color: var(--ink-faint);
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- downloads ---------- */
+.file-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 36px;
+}
+@media (max-width: 800px) { .file-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .file-grid { grid-template-columns: 1fr; } }
+
+.file-card {
+  display: block;
+  border: 1px solid var(--line);
+  background: var(--bg-card);
+  padding: 20px;
+  border-bottom: none;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.file-card:hover {
+  border-color: var(--amber-dim);
+  transform: translateY(-2px);
+}
+.file-card .ext {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: var(--amber);
+  text-transform: uppercase;
+}
+.file-card .name {
+  margin-top: 10px;
+  color: var(--ink);
+  font-size: 0.94rem;
+  line-height: 1.4;
+}
+.file-card .desc {
+  margin-top: 6px;
+  color: var(--ink-faint);
+  font-size: 0.78rem;
+}
+
+.notice {
+  margin-top: 40px;
+  border-left: 2px solid var(--amber-dim);
+  padding: 4px 0 4px 20px;
+  color: var(--ink-dim);
+  font-size: 0.88rem;
+  max-width: 62ch;
+}
+
+/* ---------- footer ---------- */
+footer {
+  border-top: 1px solid var(--line);
+  padding: 40px 0 60px;
+}
+footer .wrap {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  color: var(--ink-faint);
+  font-size: 0.8rem;
+}
+footer .refs {
+  margin-top: 24px;
+  color: var(--ink-faint);
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+
+/* ---------- reveal on scroll ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------- 404 page ---------- */
+.err-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  position: relative;
+  z-index: 1;
+}
+.err-card { max-width: 620px; text-align: left; }
+.err-code {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(4rem, 14vw, 7.5rem);
+  color: var(--amber);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.err-card h1 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin-top: 8px;
+}
+.err-card p {
+  color: var(--ink-dim);
+  margin-top: 16px;
+  max-width: 52ch;
+}
+.err-actions {
+  margin-top: 32px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.btn {
+  border: 1px solid var(--amber-dim);
+  padding: 12px 22px;
+  color: var(--ink);
+  border-bottom: 1px solid var(--amber-dim);
+  font-size: 0.86rem;
+  letter-spacing: 0.02em;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.btn:hover { background: rgba(224,149,74,0.1); border-color: var(--amber); color: var(--ink); }
+.err-trace {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-faint);
+  font-size: 0.78rem;
+}
