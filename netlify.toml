@@ -1,0 +1,17 @@
+# Netlify configuration file for Quantitative Financial Risk Engine static landing page
+
+[build]
+  # Publish the root directory containing index.html, var_cdf_comparison.png, and the PDFs
+  publish = "."
+  # No build command is necessary for static HTML/CSS/JS
+  command = ""
+
+[build.processing]
+  # Disable asset optimization if it conflicts with MathJax or custom fonts
+  skip_processing = false
+
+[[redirects]]
+  # Redirect any requests to non-existent pages back to the landing page
+  from = "/*"
+  to = "/index.html"
+  status = 200
