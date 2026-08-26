@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantitative Financial Risk Engine: Value at Risk (VaR) Analysis</title>
+    <meta name="description" content="A mathematical risk engine using continuous Cumulative Distribution Function (CDF) and Quantile theory to analyze and model S&P 500 Value at Risk (VaR) under normal, Student's t, and empirical distributions.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- MathJax for rendering LaTeX equations -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #080c14;
+            --surface-color: rgba(13, 20, 35, 0.7);
+            --surface-hover: rgba(22, 33, 56, 0.85);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(0, 210, 255, 0.3);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --primary: #00d2ff;
+            --primary-glow: rgba(0, 210, 255, 0.4);
+            --accent-green: #00e676;
+            --accent-red: #ff5252;
+            --font-title: 'Outfit', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Abstract glowing background blobs */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(0, 210, 255, 0.08) 0%, rgba(8, 12, 20, 0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: 10%;
+            right: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(0, 230, 118, 0.05) 0%, rgba(8, 12, 20, 0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Header / Navbar */
+        header {
+            width: 100%;
+            padding: 1.5rem 2rem;
+            backdrop-filter: blur(12px);
+            background: rgba(8, 12, 20, 0.6);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: var(--font-title);
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo i {
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, #00e676 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 550;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .btn-launch-nav {
+            background: linear-gradient(135deg, var(--primary) 0%, #00a8cc 100%);
+            color: #000 !important;
+            font-weight: 700 !important;
+            padding: 0.5rem 1.2rem;
+            border-radius: 6px;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.25);
+        }
+
+        .btn-launch-nav:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
+        }
+
+        /* Container styling */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 4rem 1rem 6rem;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(0, 210, 255, 0.08);
+            border: 1px solid rgba(0, 210, 255, 0.2);
+            color: var(--primary);
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hero h1 {
+            font-family: var(--font-title);
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 1.5rem;
+            letter-spacing: -1.5px;
+            background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto 3rem;
+            font-weight: 400;
+        }
+
+        .cta-group {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, #00a8cc 100%);
+            color: #080c14;
+            font-family: var(--font-title);
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 1rem 2.2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 30px rgba(0, 210, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 40px rgba(0, 210, 255, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            font-family: var(--font-title);
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 1rem 2.2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            border: 1px solid var(--border-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+
+        /* Glassmorphic Grid / Dashboard Preview */
+        .glass-panel {
+            background: var(--surface-color);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin-bottom: 4rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            border-color: var(--border-hover);
+            box-shadow: 0 10px 40px rgba(0, 210, 255, 0.06);
+        }
+
+        .preview-container {
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            gap: 2.5rem;
+            align-items: center;
+        }
+
+        @media (max-width: 968px) {
+            .preview-container {
+                grid-template-columns: 1fr;
+            }
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+        }
+
+        .preview-img-wrapper {
+            background: rgba(5, 8, 15, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .preview-img-wrapper img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            transition: transform 0.5s ease;
+        }
+
+        .preview-img-wrapper:hover img {
+            transform: scale(1.02);
+        }
+
+        .preview-text h2 {
+            font-family: var(--font-title);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            letter-spacing: -0.5px;
+        }
+
+        .preview-text p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .features-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .features-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .features-list i {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        /* Statistical Theory Section */
+        .section-title {
+            text-align: center;
+            margin-bottom: 3.5rem;
+        }
+
+        .section-title h2 {
+            font-family: var(--font-title);
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-title p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .theory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .theory-card {
+            background: var(--surface-color);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 2rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .theory-card:hover {
+            background: var(--surface-hover);
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .theory-card .icon-box {
+            width: 48px;
+            height: 48px;
+            background: rgba(0, 210, 255, 0.08);
+            border: 1px solid rgba(0, 210, 255, 0.2);
+            color: var(--primary);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .theory-card.green .icon-box {
+            background: rgba(0, 230, 118, 0.08);
+            border-color: rgba(0, 230, 118, 0.2);
+            color: var(--accent-green);
+        }
+
+        .theory-card.red .icon-box {
+            background: rgba(255, 82, 82, 0.08);
+            border-color: rgba(255, 82, 82, 0.2);
+            color: var(--accent-red);
+        }
+
+        .theory-card h3 {
+            font-family: var(--font-title);
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+        }
+
+        .theory-card p {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .theory-card .equation {
+            background: rgba(5, 8, 15, 0.6);
+            border-radius: 8px;
+            padding: 0.8rem;
+            font-size: 0.95rem;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: auto;
+        }
+
+        /* Documentation & Resources Section */
+        .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .resource-card {
+            background: rgba(13, 20, 35, 0.45);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .resource-card:hover {
+            background: rgba(13, 20, 35, 0.8);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .resource-card i {
+            font-size: 2rem;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+
+        .resource-card:hover i {
+            color: var(--primary);
+        }
+
+        .resource-info h4 {
+            font-family: var(--font-title);
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .resource-info p {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 3rem 2rem;
+            background: rgba(5, 8, 15, 0.95);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        footer p {
+            margin-bottom: 0.5rem;
+        }
+
+        footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        footer a:hover {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body class="tex2jax_ignore">
+
+    <!-- Header / Navbar -->
+    <header>
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fa-solid fa-chart-line"></i>
+                RiskEngine
+            </div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#theory">Mathematical Foundation</a></li>
+                    <li><a href="#preview">Model Visualization</a></li>
+                    <li><a href="#resources">Resources</a></li>
+                    <li><a href="https://gauravstatistics.streamlit.app" target="_blank" class="btn-launch-nav">Launch App</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main>
+        
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-badge">
+                <i class="fa-solid fa-graduation-cap"></i> DSC003 Probability & Statistics Project
+            </div>
+            <h1>Quantitative Financial Risk Engine</h1>
+            <p>
+                An analytical framework calculating Value at Risk (VaR) on real-world financial indices. We fit and validate theoretical distributions (Normal and Student's t) against historical asset returns using continuous Cumulative Distribution Functions (CDF) and Kolmogorov-Smirnov goodness-of-fit testing.
+            </p>
+            <div class="cta-group">
+                <a href="https://gauravstatistics.streamlit.app" target="_blank" class="btn-primary">
+                    <i class="fa-solid fa-rocket"></i> Launch Interactive Dashboard
+                </a>
+                <a href="#theory" class="btn-secondary">
+                    <i class="fa-solid fa-book-open"></i> Study Statistical Theory
+                </a>
+            </div>
+        </section>
+
+        <!-- Preview Section -->
+        <section id="preview" class="glass-panel">
+            <div class="preview-container">
+                <div class="preview-img-wrapper">
+                    <!-- Relative link to the generated chart in repository -->
+                    <img src="./var_cdf_comparison.png" alt="VaR CDF Comparison Graph" onerror="this.src='https://raw.githubusercontent.com/gk5760476-hash/GAURAVSTATISTICS/main/var_cdf_comparison.png'">
+                </div>
+                <div class="preview-text">
+                    <h2>Continuous CDF & Zoomed Tail Comparison</h2>
+                    <p>
+                        This empirical vs. parametric fit plot models the historical returns of the S&P 500 Index over a 10-year span (2016-2026).
+                    </p>
+                    <p>
+                        The primary plot graphs the Cumulative Distribution Functions. The inset graphs the <b>left-tail risk zoom</b>, showing that the Gaussian normal curve model (dashed red) severely underestimates losses at high confidence intervals, whereas the Student's t distribution (solid green) models the "heavy tails" with superior accuracy.
+                    </p>
+                    <ul class="features-list">
+                        <li><i class="fa-solid fa-circle-check"></i> <b>Empirical CDF (Step Function):</b> Tracks exact historical percentile values.</li>
+                        <li><i class="fa-solid fa-circle-check"></i> <b>Parametric Gaussian CDF:</b> Underestimates extreme market tail risk.</li>
+                        <li><i class="fa-solid fa-circle-check"></i> <b>Student's t-CDF (MLE Fit):</b> Effectively captures leptokurtic behavior.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Statistical Theory Section -->
+        <section id="theory">
+            <div class="section-title">
+                <h2>Mathematical Foundations</h2>
+                <p>The core statistical theory, concepts, and convergence principles driving the risk engine calculations.</p>
+            </div>
+            
+            <div class="theory-grid">
+                
+                <!-- Card 1: CDF -->
+                <div class="theory-card tex2jax_process">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-infinity"></i>
+                    </div>
+                    <h3>Continuous CDF</h3>
+                    <p>
+                        Let $X$ represent the continuous random variable of daily returns. The Cumulative Distribution Function (CDF), $F(x)$, computes the probability that a return is less than or equal to $x$.
+                    </p>
+                    <div class="equation">
+                        $$F(x) = \Pr(X \le x) = \int_{-\infty}^{x} f(t) \, dt$$
+                    </div>
+                </div>
+
+                <!-- Card 2: Quantile & VaR -->
+                <div class="theory-card green tex2jax_process">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-percent"></i>
+                    </div>
+                    <h3>Quantile Theory & VaR</h3>
+                    <p>
+                        Value at Risk ($\text{VaR}_c$) at confidence $c$ corresponds to the $(1-c)$-quantile of the return distribution, representing the loss threshold exceeded with probability $1-c$.
+                    </p>
+                    <div class="equation">
+                        $$\text{VaR}_c = -F_X^{-1}(1-c)$$
+                    </div>
+                </div>
+
+                <!-- Card 3: eCDF & Glivenko-Cantelli -->
+                <div class="theory-card tex2jax_process">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-server"></i>
+                    </div>
+                    <h3>eCDF & Convergence</h3>
+                    <p>
+                        By the Glivenko-Cantelli Theorem, the empirical step function $F_n(x)$ converges uniformly to the true underlying CDF $F(x)$ almost surely as $n \to \infty$.
+                    </p>
+                    <div class="equation">
+                        $$\lim_{n \to \infty} \sup_{x \in \mathbb{R}} |F_n(x) - F(x)| = 0 \quad \text{a.s.}$$
+                    </div>
+                </div>
+
+                <!-- Card 4: Normal MLE -->
+                <div class="theory-card red tex2jax_process">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-bezier-curve"></i>
+                    </div>
+                    <h3>Normal Model Fit</h3>
+                    <p>
+                        Parametric Gaussian model fitted via MLE estimates mean $\hat{\mu}$ and variance $\hat{\sigma}^2$. VaR is mapped via standard normal quantile $Z_{1-c}$.
+                    </p>
+                    <div class="equation">
+                        $$\text{VaR}_c^{\text{Normal}} = -(\hat{\mu} + Z_{1-c} \hat{\sigma})$$
+                    </div>
+                </div>
+
+                <!-- Card 5: Student's t MLE -->
+                <div class="theory-card green tex2jax_process">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-wave-square"></i>
+                    </div>
+                    <h3>Student's t Fit</h3>
+                    <p>
+                        Accounts for leptokurtosis (fat tails) with degrees of freedom parameter $\nu$, location $\mu$, and scale $s$, optimizing fit on historical returns via numerical MLE.
+                    </p>
+                    <div class="equation">
+                        $$\text{VaR}_c^{\text{Student-t}} = -(\hat{\mu} + t_{1-c, \hat{\nu}} \hat{s})$$
+                    </div>
+                </div>
+
+                <!-- Card 6: KS Goodness of Fit -->
+                <div class="theory-card tex2jax_process">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-gauge-high"></i>
+                    </div>
+                    <h3>Kolmogorov-Smirnov Test</h3>
+                    <p>
+                        Calculates the supremum (maximum distance) $D_n$ between the Empirical CDF $F_n(x)$ and theoretical CDF $F_{\text{model}}(x)$ to evaluate distribution validity.
+                    </p>
+                    <div class="equation">
+                        $$D_n = \sup_{x \in \mathbb{R}} |F_n(x) - F_{\text{model}}(x)|$$
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Project Resources Section -->
+        <section id="resources">
+            <div class="section-title">
+                <h2>Project Documentation & Resources</h2>
+                <p>Access the mathematical project report, data assets, and CLI codebase.</p>
+            </div>
+
+            <div class="resources-grid">
+                
+                <!-- Resource 1: PDF Report -->
+                <a href="./THE_UNPROMPTED_Open_Source_Updated_Upload_Ready.pdf" class="resource-card" download>
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <div class="resource-info">
+                        <h4>Project Report (PDF)</h4>
+                        <p>Complete academic report covering theory & equations</p>
+                    </div>
+                </a>
+
+                <!-- Resource 2: DeGroot Textbook -->
+                <a href="./Morris H DeGroot, Mark J Schervish - Probability and Statistics.pdf" class="resource-card" download>
+                    <i class="fa-solid fa-book"></i>
+                    <div class="resource-info">
+                        <h4>Probability & Statistics Textbook</h4>
+                        <p>DeGroot & Schervish (Course Reference Material)</p>
+                    </div>
+                </a>
+
+                <!-- Resource 3: CLI Script -->
+                <a href="./risk_engine.py" class="resource-card" download>
+                    <i class="fa-solid fa-terminal"></i>
+                    <div class="resource-info">
+                        <h4>CLI Risk Engine (Python)</h4>
+                        <p>Command-line statistical engine and MLE fitting script</p>
+                    </div>
+                </a>
+
+                <!-- Resource 4: Markdown Report -->
+                <a href="./Value_at_Risk_Project_Report.md" class="resource-card" target="_blank">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <div class="resource-info">
+                        <h4>Report Blueprint (Markdown)</h4>
+                        <p>View the raw mathematical report in Markdown format</p>
+                    </div>
+                </a>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 Quantitative Financial Risk Engine - DSC003 Assessment</p>
+        <p>Built for portfolio display and mathematical verification. Code hosted on <a href="https://github.com/gk5760476-hash/GAURAVSTATISTICS" target="_blank">GitHub</a>.</p>
+    </footer>
+
+</body>
+</html>
