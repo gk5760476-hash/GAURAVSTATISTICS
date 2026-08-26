@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quantitative Financial Risk Engine — Value at Risk Analysis</title>
+<meta name="description" content="A statistical study comparing empirical, Normal, and Student's t Value at Risk models for the S&P 500, built for DSC003 Probability and Statistics.">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="grain"></div>
+<div class="glow"></div>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">Risk<span>Engine</span> / VaR</div>
+    <div class="course-tag">DSC003 (Part A) · Probability &amp; Statistics · Group Project</div>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Quantitative Financial Risk Engine</span>
+      <h1>The bell curve <em>underestimates</em> how markets actually crash.</h1>
+      <p class="dek">Ten years of S&amp;P 500 daily returns, run through empirical, Normal, and Student's t models of Value at Risk — testing which distribution the tails actually believe.</p>
+
+      <div class="stat-row reveal">
+        <div class="stat">
+          <div class="k">3.40<small>%</small></div>
+          <div class="l">Empirical 99% VaR</div>
+        </div>
+        <div class="stat">
+          <div class="k">2.61<small>%</small></div>
+          <div class="l">Normal model says 99% VaR</div>
+        </div>
+        <div class="stat">
+          <div class="k">79<small>bps</small></div>
+          <div class="l">Risk the Normal model misses</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="wrap">
+      <span class="eyebrow">The Problem</span>
+      <h2>Financial returns have fatter tails than statisticians would like.</h2>
+      <div class="split">
+        <div>
+          <p class="lede">Value at Risk answers a specific question: at a given confidence level, what's the worst loss we should expect over one day? Regulators and risk desks depend on the answer, so the distribution used to compute it matters enormously.</p>
+          <p class="lede">Classical models assume returns are Normally distributed, leaning on the Central Limit Theorem. Real markets disagree — crashes cluster and extreme moves happen far more often than a Gaussian curve predicts, a property called leptokurtosis. This project fits both a Normal and a Student's t distribution to ten years of the S&amp;P 500 (ticker <code>^GSPC</code>, 2,513 trading days from 2016&#8209;01&#8209;01 to 2026&#8209;01&#8209;01) and asks a Kolmogorov&#8211;Smirnov test which one the data actually supports.</p>
+        </div>
+        <div>
+          <div class="formula-card">
+            <span class="tag">Value at Risk, by definition</span>
+            <div class="f">VaR<sub>c</sub> = &minus;F<sub>X</sub><sup>&minus;1</sup>(1&minus;c)</div>
+            <p>The c&#8209;confidence VaR is the negated (1&minus;c)&#8209;quantile of the return distribution — invert the CDF, read off the loss.</p>
+          </div>
+          <div class="formula-card">
+            <span class="tag">Glivenko&#8211;Cantelli</span>
+            <div class="f">sup<sub>x</sub> |F<sub>n</sub>(x) &minus; F(x)| &rarr; 0 a.s.</div>
+            <p>The empirical CDF converges uniformly to the true CDF as sample size grows — the theoretical license to trust historical simulation.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="wrap">
+      <span class="eyebrow">Results</span>
+      <h2>Three ways to measure the same tail risk.</h2>
+      <p class="lede">Daily loss thresholds at 95% and 99% confidence, computed three ways: directly from history, from a fitted Normal, and from a fitted Student's t (&nu;&nbsp;&asymp;&nbsp;2.54 — very heavy tails).</p>
+
+      <table class="var-table">
+        <caption>Daily VaR, expressed as a positive loss percentage</caption>
+        <thead>
+          <tr><th>Confidence</th><th>Empirical (historical)</th><th>Normal model</th><th>Student's t model</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>95.0%</td>
+            <td>1.7154%</td>
+            <td>1.8344%</td>
+            <td class="best">1.4913%</td>
+          </tr>
+          <tr>
+            <td>99.0%</td>
+            <td>3.4007%</td>
+            <td class="worst">2.6147%</td>
+            <td>3.1991%</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="ks-row">
+        <div class="ks-card fail">
+          <div class="dist">Normal fit</div>
+          <div class="stat-line">D<sub>n</sub> = 0.11322 &nbsp;·&nbsp; p = 1.62&times;10&#8315;&sup2;&#8312;</div>
+          <div class="verdict">Rejected — not a plausible model for these returns.</div>
+        </div>
+        <div class="ks-card pass">
+          <div class="dist">Student's t fit</div>
+          <div class="stat-line">D<sub>n</sub> = 0.02462 &nbsp;·&nbsp; p = 0.0935</div>
+          <div class="verdict">Fails to reject at &alpha; = 0.05 — statistically compatible.</div>
+        </div>
+      </div>
+
+      <figure class="plot">
+        <img src="/var_cdf_comparison.png" alt="Cumulative distribution function comparison of the empirical S&P 500 return distribution against fitted Normal and Student's t models, with an inset zoom on the left-tail loss region showing the 95% and 99% VaR thresholds.">
+        <figcaption>Empirical CDF (F<sub>n</sub>) against fitted Normal and Student's t CDFs. The inset isolates the loss tail: the Normal curve peels away first, understating exactly the losses a 99% risk limit is meant to catch.</figcaption>
+      </figure>
+
+      <p class="notice">At 99% confidence, a desk sizing capital off the Normal model would breach its own risk limit far more often than the 1% it's budgeting for. The Student's t fit — with 2.54 degrees of freedom — tracks the historical tail closely enough to pass the goodness&#8209;of&#8209;fit test the Normal model fails.</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="wrap">
+      <span class="eyebrow">Source &amp; Writeup</span>
+      <h2>Everything behind the numbers.</h2>
+      <p class="lede">The interactive dashboard (built with Streamlit) runs locally rather than on this static site — Streamlit needs a persistent Python process, which this host doesn't run. Everything it produces is below.</p>
+
+      <div class="file-grid">
+        <a class="file-card" href="/Value_at_Risk_Project_Report.md" download>
+          <div class="ext">Report · MD</div>
+          <div class="name">Value at Risk Project Report</div>
+          <div class="desc">Full write-up: theory, MLE fitting, KS testing, results, and references.</div>
+        </a>
+        <a class="file-card" href="/app.py" download>
+          <div class="ext">Source · PY</div>
+          <div class="name">app.py</div>
+          <div class="desc">Streamlit dashboard — ticker input, date range, live VaR and CDF plots.</div>
+        </a>
+        <a class="file-card" href="/risk_engine.py" download>
+          <div class="ext">Source · PY</div>
+          <div class="name">risk_engine.py</div>
+          <div class="desc">CLI engine: downloads S&amp;P 500 history, fits both models, runs KS tests.</div>
+        </a>
+        <a class="file-card" href="/results_summary.txt" download>
+          <div class="ext">Output · TXT</div>
+          <div class="name">results_summary.txt</div>
+          <div class="desc">Raw numeric output generated by the CLI engine.</div>
+        </a>
+        <a class="file-card" href="/var_cdf_comparison.png" download>
+          <div class="ext">Figure · PNG</div>
+          <div class="name">var_cdf_comparison.png</div>
+          <div class="desc">The comparative CDF plot shown above, full resolution.</div>
+        </a>
+        <a class="file-card" href="/Resume_Bullet_Points.md" download>
+          <div class="ext">Notes · MD</div>
+          <div class="name">Resume Bullet Points</div>
+          <div class="desc">This project rewritten for a quant, data science, or SRE resume.</div>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>Quantitative Financial Risk Engine — a DSC003 group project.</div>
+    <div>Run locally: <code>pip install -r requirements.txt &amp;&amp; streamlit run app.py</code></div>
+  </div>
+  <div class="wrap refs">
+    DeGroot &amp; Schervish, <em>Probability and Statistics</em> (4th ed., Pearson) · Hull, <em>Risk Management and Financial Institutions</em> (5th ed., Wiley) · Glivenko (1933), <em>Giornale dell'Istituto Italiano degli Attuari</em>
+  </div>
+</footer>
+
+<script>
+  var els = document.querySelectorAll('.reveal');
+  var io = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('in'); });
+  }, { threshold: 0.12 });
+  els.forEach(function(el) { io.observe(el); });
+</script>
+</body>
+</html>
