@@ -1,0 +1,20 @@
+VALUE AT RISK (VaR) ANALYSIS SUMMARY RESULTS
+==================================================
+Asset Index Analyzed: ^GSPC
+Sample Period       : 2016-01-01 to 2026-01-01
+Total Trading Days  : 2513
+Fitted Normal parameters: mu=0.000487, sigma=0.011449
+Fitted Student's t parameters: nu=2.5389, mu=0.000951, scale=0.006250
+--------------------------------------------------
+95% Empirical VaR: 1.7154%
+95% Normal VaR   : 1.8344%
+95% Student's t VaR: 1.4913%
+--------------------------------------------------
+99% Empirical VaR: 3.4007%
+99% Normal VaR   : 2.6147%
+99% Student's t VaR: 3.1991%
+--------------------------------------------------
+KOLMOGOROV-SMIRNOV GOODNESS-OF-FIT RESULTS:
+Normal Distribution: KS Distance=0.11322, p-value=1.62e-28
+Student's t-Distribution: KS Distance=0.02462, p-value=9.35e-02
+==================================================
