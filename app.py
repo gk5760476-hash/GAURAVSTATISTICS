@@ -158,8 +158,8 @@ else:
         t_var = -t.ppf(alpha, df_t, loc=loc_t, scale=scale_t)
         
         # 4. Kolmogorov-Smirnov Goodness-of-Fit Test
-        ks_stat_norm, p_val_norm = kstest(returns, 'norm', args=(mu_norm, std_norm))
-        ks_stat_t, p_val_t = kstest(returns, 't', args=(df_t, loc_t, scale_t))
+        ks_stat_norm, p_val_norm = kstest(returns, norm(loc=mu_norm, scale=std_norm).cdf)
+        ks_stat_t, p_val_t = kstest(returns, t(df_t, loc=loc_t, scale=scale_t).cdf)
         
         # --- UI LAYOUT ---
         col1, col2, col3 = st.columns(3)
