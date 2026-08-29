@@ -331,12 +331,12 @@ def _compute_bootstrap_ks(returns_tuple, df_t, loc_t, scale_t, B=500):
     """Pure computation — no Streamlit widgets inside cache."""
     returns = np.array(returns_tuple)
     n = len(returns)
-    ks_stat, _ = kstest(returns, 't', args=(df_t, loc_t, scale_t))
+    ks_stat, _ = kstest(returns, t(df=df_t, loc=loc_t, scale=scale_t).cdf)
     bootstrap_stats = []
     for i in range(B):
         boot_sample = t.rvs(df_t, loc=loc_t, scale=scale_t, size=n)
         b_df, b_loc, b_scale = t.fit(boot_sample)
-        b_ks, _ = kstest(boot_sample, 't', args=(b_df, b_loc, b_scale))
+        b_ks, _ = kstest(boot_sample, t(df=b_df, loc=b_loc, scale=b_scale).cdf)
         bootstrap_stats.append(b_ks)
     bootstrap_stats = np.array(bootstrap_stats)
     corrected_p_val = np.sum(bootstrap_stats >= ks_stat) / B
@@ -414,8 +414,8 @@ else:
         t_var = -t.ppf(alpha, df_t, loc=loc_t, scale=scale_t)
 
         # 4. Kolmogorov-Smirnov Goodness-of-Fit Test
-        ks_stat_norm, p_val_norm = kstest(returns, 'norm', args=(mu_norm, std_norm))
-        ks_stat_t, p_val_t = kstest(returns, 't', args=(df_t, loc_t, scale_t))
+        ks_stat_norm, p_val_norm = kstest(returns, norm(loc=mu_norm, scale=std_norm).cdf)
+        ks_stat_t, p_val_t = kstest(returns, t(df=df_t, loc=loc_t, scale=scale_t).cdf)
 
         # Calculate bootstrap corrected p-value if checked
         p_val_t_corr = None

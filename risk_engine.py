@@ -14,7 +14,7 @@ def run_parametric_bootstrap(returns, df_t, loc_t, scale_t, B=500):
     print(f"\nRunning parametric bootstrap (B={B}) to correct parameter fitting bias...")
     n = len(returns)
     # Original KS statistic
-    ks_stat, _ = kstest(returns, 't', args=(df_t, loc_t, scale_t))
+    ks_stat, _ = kstest(returns, t(df=df_t, loc=loc_t, scale=scale_t).cdf)
     
     bootstrap_stats = []
     for i in range(B):
@@ -23,7 +23,7 @@ def run_parametric_bootstrap(returns, df_t, loc_t, scale_t, B=500):
         # Fit Student's t on bootstrap sample
         b_df, b_loc, b_scale = t.fit(boot_sample)
         # Calculate KS stat
-        b_ks, _ = kstest(boot_sample, 't', args=(b_df, b_loc, b_scale))
+        b_ks, _ = kstest(boot_sample, t(df=b_df, loc=b_loc, scale=b_scale).cdf)
         bootstrap_stats.append(b_ks)
         
         if (i + 1) % 100 == 0:
@@ -130,8 +130,8 @@ def run_risk_engine(run_bootstrap=False):
     
     # Step 6: Kolmogorov-Smirnov (KS) Goodness-of-Fit Test
     # KS distance D_n = sup |F_n(x) - F(x)|
-    ks_stat_norm, p_val_norm = kstest(returns, 'norm', args=(mu_norm, std_norm))
-    ks_stat_t, p_val_t = kstest(returns, 't', args=(df_t, loc_t, scale_t))
+    ks_stat_norm, p_val_norm = kstest(returns, norm(loc=mu_norm, scale=std_norm).cdf)
+    ks_stat_t, p_val_t = kstest(returns, t(df=df_t, loc=loc_t, scale=scale_t).cdf)
     
     # Run parametric bootstrap if requested
     p_val_t_corr = None
