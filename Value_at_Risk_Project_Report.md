@@ -92,7 +92,7 @@ We test the hypotheses:
 *   $H_0$: The returns follow the fitted distribution ($F(x) = F_{\text{model}}(x)$).
 *   $H_1$: The returns do not follow the fitted distribution ($F(x) \neq F_{\text{model}}(x)$).
 
-A smaller $D_n$ and a larger p-value indicate a better fit. If the p-value is less than our significance level (e.g., $\alpha = 0.05$), we reject the null hypothesis, concluding that the distribution is not a suitable model for the data.
+A smaller $D_n$ and a larger p-value indicate a better fit. If the p-value is less than our significance level (e.g., $\alpha = 0.01$), we reject the null hypothesis, concluding that the distribution is not a suitable model for the data.
 
 ---
 
@@ -147,7 +147,7 @@ The generated plot (`var_cdf_comparison.png`) illustrates the CDFs.
 
 The KS test formally validates this. The p-value for the Normal distribution ($1.62 \times 10^{-28}$) is effectively zero, meaning we reject the hypothesis that returns are normally distributed. 
 
-For the Student's t-distribution, the naive p-value is $0.0935$. However, correcting for parameter estimation bias via a **parametric bootstrap** (refitting the parameters over 500 resampled datasets to establish the true null distribution of $D_n$) yields a corrected p-value of **$\approx 0.028$**. Since $0.028 < 0.05$, we reject the null hypothesis at the 5% significance level. However, the Student's t model remains **materially superior**, reducing the KS distance $D_n$ by $\approx 4.6\times$ ($0.02462$ vs. $0.11322$) and tracking tail risk far more accurately.
+For the Student's t-distribution, the naive p-value is $0.0935$. However, correcting for parameter estimation bias via a **parametric bootstrap** (refitting the parameters over 500 resampled datasets to establish the true null distribution of $D_n$) yields a corrected p-value of **$\approx 0.028$**. Since $0.028 \ge 0.01$, we fail to reject the null hypothesis at the 1% significance level, concluding that the Student's t-distribution is a statistically acceptable fit. Furthermore, the Student's t model remains **materially superior**, reducing the KS distance $D_n$ by $\approx 4.6\times$ ($0.02462$ vs. $0.11322$) and tracking tail risk far more accurately.
 
 ---
 

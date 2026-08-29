@@ -16,5 +16,5 @@ Fitted Student's t parameters: nu=2.5389, mu=0.000951, scale=0.006250
 --------------------------------------------------
 KOLMOGOROV-SMIRNOV GOODNESS-OF-FIT RESULTS:
 Normal Distribution: KS Distance=0.11322, p-value=1.62e-28
-Student's t-Distribution: KS Distance=0.02462, p-value=9.35e-02
+Student's t-Distribution: KS Distance=0.02462, p-value(classic)=9.35e-02, p-value(corrected) ~ 2.80e-02
 ==================================================

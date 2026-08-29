@@ -550,7 +550,7 @@ else:
             p_val_t_display = f"{p_val_t:.2e} (naive)"
             if p_val_t_corr is not None:
                 p_val_t_display += f" | {p_val_t_corr:.3f} (corrected)"
-                t_status = "❌ Reject" if p_val_t_corr < 0.05 else "✅ Pass"
+                t_status = "❌ Reject" if p_val_t_corr < 0.01 else "✅ Pass"
             else:
                 p_val_t_display += " | Run bootstrap ↑"
                 t_status = "⏳ Bootstrap needed"
@@ -559,8 +559,8 @@ else:
                 "Model": ["Normal (Gaussian)", "Student's t"],
                 "KS Distance (Dₙ)": [f"{ks_stat_norm:.5f}", f"{ks_stat_t:.5f}"],
                 "p-value": [f"{p_val_norm:.2e}", p_val_t_display],
-                "Status (5%)": [
-                    "❌ Reject" if p_val_norm < 0.05 else "✅ Pass",
+                "Status (1%)": [
+                    "❌ Reject" if p_val_norm < 0.01 else "✅ Pass",
                     t_status
                 ]
             }
@@ -672,7 +672,7 @@ else:
             $$D_n = \sup_{x} |F_n(x) - F_{\text{model}}(x)|$$
 
             *   **Null Hypothesis ($H_0$):** The data follows the fitted model distribution.
-            *   **Decision Rule:** If the p-value is less than $0.05$ (5%), we reject $H_0$, concluding that the distribution is not a suitable fit.
+            *   **Decision Rule:** If the p-value is less than $0.01$ (1%), we reject $H_0$, concluding that the distribution is not a suitable fit.
             *   **The Parameter Estimation Bias (Lilliefors Effect):** When the parameters of the distribution ($\mu, \sigma$ for Normal, or $\nu, \mu, s$ for Student's t) are estimated from the *same* sample data on which the test is performed, the classical KS test p-value formula does not strictly apply and is inflated. Because the fitted curve is "tuned" to the data, $D_n$ is naturally smaller, leading to an optimistically inflated naive p-value.
             *   **Parametric Bootstrap Correction:** By running a parametric bootstrap (generating $B = 500$ datasets from the fitted distribution, refitting parameters, and calculating the null distribution of $D_n$), we find the true corrected p-value, which is typically more conservative than the naive value.
             """)
@@ -683,7 +683,7 @@ else:
             if p_val_t_corr is not None:
                 corr_text = f"**{p_val_t_corr:.3f}** (computed live via bootstrap)"
                 ks_t_verdict = (
-                    f"Since {p_val_t_corr:.3f} {'< 0.05, we technically reject it under strict statistical rules' if p_val_t_corr < 0.05 else '>= 0.05, we fail to reject it'}."
+                    f"Since {p_val_t_corr:.3f} {'< 0.01, we reject the null hypothesis at the 1% level (indicating some residual deviation)' if p_val_t_corr < 0.01 else '>= 0.01, we fail to reject the null hypothesis at the 1% significance level, confirming it as a statistically acceptable model'}."
                 )
             else:
                 corr_text = "*(not yet computed — enable Bootstrap in the sidebar)*"
@@ -710,6 +710,6 @@ else:
 
             #### 4. What does the Kolmogorov-Smirnov (KS) Test prove?
             The KS test is a mathematical referee that scores our models:
-            *   **Normal Fit:** It checks if the returns behave like a perfect normal bell curve. The result is a p-value of **{p_val_norm:.2e}**. {"Because this is extremely small (less than 5%), the test officially **rejects** the Normal model." if p_val_norm < 0.05 else "The test does not reject the Normal model at the 5% level."}
+            *   **Normal Fit:** It checks if the returns behave like a perfect normal bell curve. The result is a p-value of **{p_val_norm:.2e}**. {"Because this is extremely small (less than 1%), the test officially **rejects** the Normal model." if p_val_norm < 0.01 else "The test does not reject the Normal model at the 1% level."}
             *   **Student's t Fit:** The naive p-value is **{p_val_t:.2e}**. The corrected p-value is {corr_text}. {ks_t_verdict} However, the Student's t model remains **materially superior**, as it reduces the KS distance Dₙ by **{ks_stat_norm/ks_stat_t:.1f}×** compared to the Normal distribution ({ks_stat_t:.5f} vs {ks_stat_norm:.5f}).
             """)

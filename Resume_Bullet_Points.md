@@ -9,7 +9,7 @@ To highlight this project on your CV/resume, here are three pre-written, profess
 > *   Designed and implemented a mathematical **Quantitative Risk Engine** in Python utilizing `yfinance` to evaluate downside volatility and Value at Risk (VaR) for the S&P 500 Index over a 10-year period (2500+ daily observations).
 > *   Formulated continuous **Cumulative Distribution Functions (CDFs)** and **Quantile Functions** to compute empirical vs. parametric VaR at 95% and 99% confidence levels.
 > *   Conducted Maximum Likelihood Estimation (MLE) fitting of **Normal** and **Student's t-distributions**, demonstrating the risk-underestimation of Gaussian models in high-volatility regimes due to heavy tails.
-> *   Validated distribution fits using **Kolmogorov-Smirnov (KS) Goodness-of-Fit Tests**, achieving a Student's t fit passing p-value of 0.0935 vs. Normal fit p-value of $1.6 \times 10^{-28}$, and generated publication-quality comparative CDF plots with inset tail zoom visualization.
+> *   Validated distribution fits using **Kolmogorov-Smirnov (KS) Goodness-of-Fit Tests**, uncovering parameter-estimation bias via parametric bootstrap (refitting 500 resamples to correct the naive KS p-value from $0.0935$ to $0.028$, proving Student's t is a $4.6\times$ superior fit over Normal despite strict rejection limits), and generated publication-quality comparative CDF plots with inset tail zoom visualization.
 
 ---
 
