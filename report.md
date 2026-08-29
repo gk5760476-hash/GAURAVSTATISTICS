@@ -15,7 +15,7 @@ In financial markets, estimating the potential loss of a portfolio is critical f
 
 The core challenge in calculating VaR is accurately modeling the distribution of financial returns. Historically, financial models assumed that stock returns follow a Normal (Gaussian) distribution due to the Central Limit Theorem. However, real-world asset returns exhibit "leptokurtosis" (fat tails and high peaks), meaning extreme market crashes (such as the 2008 Financial Crisis or the 2020 COVID-19 crash) occur far more frequently than a Normal distribution predicts. Underestimating these tails leads to severe under-capitalization and risk exposure. 
 
-This project builds a quantitative risk engine to analyze daily returns of the **S&P 500 Index** over a 10-year period (2016–2026). We analyze and compare the empirical distribution of returns against parametric models fitted using both the Normal and Student's t-distributions, utilizing the Cumulative Distribution Function (CDF) as our primary analytical framework.
+This project builds an advanced quantitative risk engine to analyze daily returns of major financial indices, including the **S&P 500 Index (`^GSPC`)** and the **NIFTY 50 Index (`^NSEI`)**, over a 10-year period. We analyze and compare the empirical distribution of returns against parametric models fitted using both the Normal and Student's t-distributions, utilizing the Cumulative Distribution Function (CDF) as our primary analytical framework.
 
 ---
 
@@ -77,7 +77,7 @@ where $Z_{1-c}$ is the standard normal quantile (e.g., $Z_{0.05} \approx -1.645$
 
 #### 3.5.2. Student's t-Distribution Fit
 To capture heavy tails, we fit a Student's t-distribution with location parameter $\mu$, scale parameter $s$, and degrees of freedom $\nu$. The PDF is:
-$$f_t(x; \nu, \mu, s) = \frac{\Gamma\left(\frac{\nu+1}{2}\right)}{\Gamma\left(\frac{\nu}{2}\right)\sqrt{\pi \nu} s} \left[1 + \frac{1}{\nu}\left(\frac{x - \mu}{s}\right)^2\right]^{-\frac{\nu+1}{2}}$$
+$$f_t(x; \nu, \mu, s) = \frac{\Gamma\left(\frac{\nu+1}{2}\right)}{\Gamma\left(\frac{\nu}{2}\right) s \sqrt{\pi \nu}} \left[1 + \frac{1}{\nu}\left(\frac{x - \mu}{s}\right)^2\right]^{-\frac{\nu+1}{2}}$$
 The CDF $F_t(x)$ is calculated by integrating this density numerically. The parameter $\nu$ controls the thickness of the tails: lower values of $\nu$ indicate heavier tails. As $\nu \to \infty$, the Student's t-distribution converges to the Normal distribution. Parametric Student's t VaR is:
 $$\text{VaR}_c = -(\hat{\mu} + t_{1-c, \hat{\nu}} \hat{s})$$
 where $t_{1-c, \hat{\nu}}$ is the quantile of the standard Student's t-distribution with $\hat{\nu}$ degrees of freedom.
@@ -97,18 +97,18 @@ A smaller $D_n$ and a larger p-value indicate a better fit. If the p-value is le
 ---
 
 ## 4. Real-Life Example/Case Study
-We implement this risk engine using daily historical close prices of the **S&P 500 Index** (ticker: `^GSPC`) downloaded from Yahoo Finance.
-*   **Sample Period:** January 1, 2016 to January 1, 2026
-*   **Total Sample Size ($n$):** 2,513 daily return observations
-*   **Asset Class:** Large-cap US Equities index (representing real-world diversified stock portfolio risk).
+We implement this risk engine using daily historical close prices of the **S&P 500 Index** (ticker: `^GSPC`) and **NIFTY 50 Index** (ticker: `^NSEI`) downloaded from Yahoo Finance.
+*   **Sample Period:** January 1, 2016 to January 1, 2026 (or custom ranges)
+*   **Total Sample Size ($n$):** ~2,513 daily return observations
+*   **Asset Class:** Large-cap global equity indices representing diversified stock portfolio risk.
 
-For each trading day $t$, we calculate the logarithmic return from the adjusted closing price $P_t$:
+For each trading day $t$, we calculate the logarithmic return from the closing price $P_t$:
 $$R_t = \ln\left(\frac{P_t}{P_{t-1}}\right)$$
 Logarithmic returns are preferred over simple returns because they are time-additive and track continuous compounding.
 
 ---
 
-## 5. Results
+## 5. Results (Case Study: S&P 500 Index)
 The quantitative risk engine generated the following results from the S&P 500 return dataset:
 
 ### 5.1. Maximum Likelihood Parameter Estimates
@@ -134,17 +134,20 @@ The table below displays the daily VaR estimates (expressed as positive loss per
     *   p-value: $1.62 \times 10^{-28}$
 *   **Student's t-Distribution Fit:**
     *   KS Statistic ($D_n$): $0.02462$
-    *   p-value: $0.0935$ ($9.35\%$)
+    *   p-value (Classic, uncorrected): $0.0935$ ($9.35\%$)
+    *   p-value (Parametric Bootstrap corrected): $\approx 0.028$ ($2.80\%$)
 
 ### 5.4. Analysis of the Comparative CDF Plot (Tail Zoom)
 The generated plot (`var_cdf_comparison.png`) illustrates the CDFs. 
-*   **Main Plot:** The three curves appear to overlap closely, representing the body of the distribution.
-*   **Left-Tail Zoom (Inset):** The inset zooms into the critical loss region (daily returns from $-6\%$ to $-0.5\%$, where probabilities are under $8\%$). Here, the structural failure of the Normal CDF model is laid bare:
+*   **Main Plot:** The three curves overlap closely in the central body of the distribution.
+*   **Left-Tail Zoom (Inset):** The inset zooms into the critical loss region (daily returns from $-6\%$ to $-0.5\%$, where probabilities are under $8\%$). Here, the structural failure of the Normal CDF model is clear:
     *   At the 99% confidence level, the **Empirical VaR** is **$3.401\%$**. 
-    *   The **Normal CDF** yields a VaR of only **$2.615\%$**. This represents a severe underestimation of risk. If a bank managed its capital using the Normal model, a 99% risk limit would be breached far more often than 1% of the time, leading to unexpected insolvency.
-    *   The **Student's t CDF** yields a VaR of **$3.199\%$**, which matches the empirical tail much closer. It captures the slow decay of the probability tail.
+    *   The **Normal CDF** yields a VaR of only **$2.615\%$**. This represents a severe underestimation of risk.
+    *   The **Student's t CDF** yields a VaR of **$3.199\%$**, which matches the empirical tail much closer.
 
-The KS test formally validates this. The p-value for the Normal distribution ($1.62 \times 10^{-28}$) is effectively zero, meaning we reject the hypothesis that S&P 500 returns are normally distributed. In contrast, the Student's t-distribution yields a p-value of $9.35\%$. Since $0.0935 > 0.05$, we fail to reject the null hypothesis at the 5% significance level, proving that the Student's t-distribution is a statistically compatible fit for S&P 500 returns.
+The KS test formally validates this. The p-value for the Normal distribution ($1.62 \times 10^{-28}$) is effectively zero, meaning we reject the hypothesis that returns are normally distributed. 
+
+For the Student's t-distribution, the naive p-value is $0.0935$. However, correcting for parameter estimation bias via a **parametric bootstrap** (refitting the parameters over 500 resampled datasets to establish the true null distribution of $D_n$) yields a corrected p-value of **$\approx 0.028$**. Since $0.028 < 0.05$, we reject the null hypothesis at the 5% significance level. However, the Student's t model remains **materially superior**, reducing the KS distance $D_n$ by $\approx 4.6\times$ ($0.02462$ vs. $0.11322$) and tracking tail risk far more accurately.
 
 ---
 
@@ -152,20 +155,46 @@ The KS test formally validates this. The p-value for the Normal distribution ($1
 
 ### 6.1. Key Takeaways
 1.  **CDF is the Core Risk Framework:** The Cumulative Distribution Function is the natural framework for evaluating risk because it maps return thresholds directly to cumulative probabilities of losses.
-2.  **The Normal Distribution Underestimates Tail Risk:** The Gaussian assumption fails to model financial assets. At 99% confidence, the Normal model underestimates the S&P 500 daily loss threshold by approximately $79$ basis points ($2.615\%$ vs $3.401\%$).
-3.  **Student's t-Distribution is Superior:** By incorporating the degrees of freedom parameter ($\nu \approx 2.54$), the Student's t-distribution captures leptokurtosis, matches the empirical CDF tail, and passes the Kolmogorov-Smirnov test.
+2.  **The Normal Distribution Underestimates Tail Risk:** The Gaussian assumption fails to model financial assets. At 99% confidence, the Normal model underestimates S&P 500 daily loss thresholds by approximately $79$ basis points.
+3.  **Student's t-Distribution is Superior:** By incorporating the degrees of freedom parameter ($\nu \approx 2.54$), the Student's t-distribution captures leptokurtosis and tracks tail risk far more accurately.
 
 ### 6.2. Limitations of VaR
-While VaR is a valuable risk metric, it has significant statistical limitations:
-1.  **No Information Beyond Threshold:** VaR only states the threshold of loss (e.g., $3.40\%$ loss at 99% confidence). It provides no information about the magnitude of losses *beyond* this threshold (the shape of the tail past 99%).
-2.  **Non-Subadditivity:** VaR is not a mathematically "coherent" risk measure because it violates subadditivity. The VaR of a combined portfolio can sometimes be greater than the sum of the individual VaRs of its components, discouraging diversification.
-3.  **Stationarity Assumption:** Parametric and historical VaR models assume that historical volatility and distribution shapes remain constant over time (stationarity), which fails during sudden market structural shifts.
+1.  **No Information Beyond Threshold:** VaR only states the threshold of loss. It provides no information about the magnitude of losses *beyond* this threshold.
+2.  **Non-Subadditivity:** VaR is not mathematically "coherent" because it violates subadditivity.
+3.  **Stationarity Assumption:** Assumes historical volatility and distribution shapes remain constant over time.
 
-To address these limitations, modern financial systems augment VaR with **Expected Shortfall (ES)** (also called Conditional VaR), which integrates the tail of the CDF beyond the VaR quantile to calculate the average loss in the worst-case scenario.
+To address these, modern systems augment VaR with **Expected Shortfall (ES)**.
 
 ---
 
-## 7. References
+## 7. Model Implementation Details and Tech Stack
+
+To make this risk engine accessible and interactive, we implemented the mathematical models as a live dashboard application.
+
+### 7.1. Technology Stack
+The application is built using the following libraries and tools:
+*   **Python:** Core programming language.
+*   **Streamlit:** Web application framework for responsive dashboard development.
+*   **yfinance (Yahoo Finance API):** Downloads real-time daily stock and index prices.
+*   **SciPy (`scipy.stats`):** Handles MLE parameter estimation (`fit`), CDF integration (`cdf`), and KS testing (`kstest`).
+*   **NumPy:** Fast vectorized operations and quantile calculations.
+*   **Pandas:** Log return calculations, time series alignment, and multi-format export handling.
+*   **Matplotlib:** Custom visualization of CDF distributions and tail risk insets.
+*   **OpenPyXL:** Excel spreadsheet generation for exporting data.
+
+### 7.2. Interactive Model Visualisation
+Below is the default CDF chart generated by our risk engine, illustrating the empirical, Normal, and Student's t fits with the left-tail zoom inset:
+
+![Value at Risk CDF Comparison](./var_cdf_comparison.png)
+
+### 7.3. Live Dashboard URL
+The interactive model is hosted online. The teacher and examiners can view and test it at:
+*   **Live App URL:** [https://gauravsta-c5n7uj5snlnjwbs5rndepw.streamlit.app/](https://gauravsta-c5n7uj5snlnjwbs5rndepw.streamlit.app/)
+*   **GitHub Repository:** [https://github.com/gk5760476-hash/GAURAVSTATISTICS](https://github.com/gk5760476-hash/GAURAVSTATISTICS)
+
+---
+
+## 8. References
 1.  DeGroot, M. H., & Schervish, M. J. (2012). *Probability and Statistics* (4th Edition). Pearson.
     *   *Section 3.3: The Cumulative Distribution Function (pages 107–116).*
     *   *Section 3.4: Bivariate Distributions & Quantile/VaR Examples (pages 118–129).*
