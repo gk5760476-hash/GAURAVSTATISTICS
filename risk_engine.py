@@ -235,7 +235,7 @@ def run_risk_engine(run_bootstrap=False):
     
     # Annotate VaR levels in the inset
     # Add a marker or note
-    ax_inset.annotate('95% VaR', xy=(-emp_var_95, 0.05), xytext=(-emp_var_95 + 0.005, 0.06),
+    ax_inset.annotate('95% VaR', xy=(-emp_var_95, 0.01), xytext=(-emp_var_95 + 0.005, 0.06),
                       arrowprops=dict(arrowstyle="->", color='#2c3e50', lw=0.8), fontsize=8, color='#2c3e50')
     ax_inset.annotate('99% VaR', xy=(-emp_var_99, 0.01), xytext=(-emp_var_99 - 0.015, 0.02),
                       arrowprops=dict(arrowstyle="->", color='#2c3e50', lw=0.8), fontsize=8, color='#2c3e50')
