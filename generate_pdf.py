@@ -7,14 +7,43 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 
 def format_latex(formula):
-    # Order matters: replace specific patterns first
-    
-    # Clean up standard cases first
-    formula = formula.replace('\\begin{cases}', '{ ').replace('\\end{cases}', '')
+    # Standard substitutions for brackets, alignment
+    formula = formula.replace('\\begin{cases}', '{ ').replace('\\end{cases}', ' }')
     formula = formula.replace('& \\text{if }', ' if ').replace('\\\\', '; ')
+    formula = formula.replace('\\left(', '(').replace('\\right)', ')')
+    formula = formula.replace('\\left[', '[').replace('\\right]', ']')
+    formula = formula.replace('\\left\\{', '{').replace('\\right\\}', '}')
+    formula = formula.replace('\\right.', '')
+    formula = formula.replace('\\,', ' ').replace('\\;', ' ').replace('\\quad', '  ')
     
-    # 1. Fractions
-    # \frac{a}{b} -> (a / b)
+    # Specific math symbols and operators
+    formula = formula.replace('\\int_{-\\infty}^{x}', '∫ [from -∞ to x]')
+    formula = formula.replace('\\int_{-\\infty}^{\\frac{x - \\mu}{\\sigma}}', '∫ [from -∞ to (x - μ)/σ]')
+    formula = formula.replace('\\int', '∫')
+    
+    formula = formula.replace('\\sum_{i=1}^{n}', 'Σ [from i=1 to n]')
+    formula = formula.replace('\\sum', 'Σ')
+    
+    formula = formula.replace('\\lim_{n \\to \\infty}', 'lim (n → ∞)')
+    
+    formula = formula.replace('\\sup_{x \\in \\mathbb{R}}', 'sup [x ∈ ℝ]')
+    formula = formula.replace('\\sup_{x}', 'sup [x]')
+    formula = formula.replace('\\sup', 'sup')
+    
+    # Run specific replacements first to avoid nested curly brace issues in fraction parser
+    pre_replacements = {
+        '\\sqrt{2\\pi}': '√(2π)',
+        '\\sqrt{\\pi \\nu}': '√(π * ν)',
+    }
+    for key, value in pre_replacements.items():
+        formula = formula.replace(key, value)
+        
+    # Clean up subscripts/superscripts formatting braces BEFORE fraction parsing
+    # so that nested subscript braces in fractions (like P_{t-1}) don't break the fraction regex
+    formula = re.sub(r'_(?:\\)?\{([^{}]+)\}', r'_\1', formula)
+    formula = re.sub(r'\^(?:\\)?\{([^{}]+)\}', r'^\1', formula)
+    
+    # Fractions: \frac{a}{b} -> (a / b)
     while '\\frac' in formula:
         match = re.search(r'\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}', formula)
         if match:
@@ -23,84 +52,59 @@ def format_latex(formula):
         else:
             break
             
-    # 2. Sums and integrals
-    formula = formula.replace('\\int_{-\\infty}^{x}', '∫ [from -∞ to x]')
-    formula = formula.replace('\\int_{-\\infty}^{\\frac{x - \\mu}{\\sigma}}', '∫ [from -∞ to (x - μ)/σ]')
-    formula = formula.replace('\\int', '∫')
-    formula = formula.replace('\\sum_{i=1}^{n}', 'Σ [from i=1 to n]')
-    formula = formula.replace('\\sum', 'Σ')
-    formula = formula.replace('\\sup_{x \\in \\mathbb{R}}', 'sup [x ∈ ℝ]')
-    formula = formula.replace('\\sup_{x}', 'sup [x]')
-    formula = formula.replace('\\sup', 'sup')
+    # Simple greek letters and structural replacements (Longest/most specific keys first!)
+    replacements = [
+        # Long keys first
+        ('\\hat{\\mu}', 'μ-hat'),
+        ('\\hat{\\sigma}', 'σ-hat'),
+        ('\\hat{\\nu}', 'ν-hat'),
+        ('\\hat{s}', 's-hat'),
+        ('\\text{Normal}', 'Normal'),
+        ('\\text{Student-t}', 'Student-t'),
+        ('\\text{model}', 'model'),
+        ('\\text{fitted}', 'fitted'),
+        ('\\text{a.s.}', 'a.s.'),
+        ('\\text{VaR}', 'VaR'),
+        ('\\inf', 'inf'),  # must be before \in
+        ('\\in', '∈'),
+        
+        # Shorter symbols
+        ('\\alpha', 'α'),
+        ('\\beta', 'β'),
+        ('\\gamma', 'γ'),
+        ('\\Gamma', 'Γ'),
+        ('\\delta', 'δ'),
+        ('\\epsilon', 'ε'),
+        ('\\theta', 'θ'),
+        ('\\mu', 'μ'),
+        ('\\sigma', 'σ'),
+        ('\\nu', 'ν'),
+        ('\\pi', 'π'),
+        ('\\Phi', 'Φ'),
+        ('\\le', '≤'),
+        ('\\leq', '≤'),
+        ('\\ge', '≥'),
+        ('\\geq', '≥'),
+        ('\\infty', '∞'),
+        ('\\approx', '≈'),
+        ('\\to', '→'),
+        ('\\implies', '⇒'),
+        ('\\Pr', 'Pr'),
+        ('\\mathbb{R}', 'ℝ'),
+        ('\\mathcal{N}', 'N'),
+        ('\\dots', '...'),
+        ('\\cdot', '·'),
+        ('\\ne', '≠'),
+        ('\\neq', '≠'),
+        ('\\times', '×'),
+        ('\\sqrt', '√'),
+    ]
     
-    # 3. Limits
-    formula = formula.replace('\\lim_{n \\to \\infty}', 'lim (n → ∞)')
-    
-    # 4. Braces/delimiters
-    formula = formula.replace('\\left(', '(').replace('\\right)', ')')
-    formula = formula.replace('\\left[', '[').replace('\\right]', ']')
-    formula = formula.replace('\\left\\{', '{').replace('\\right\\}', '}')
-    formula = formula.replace('\\right.', '')
-    
-    # 5. Greek letters and math symbols
-    replacements = {
-        '\\alpha': 'α',
-        '\\beta': 'β',
-        '\\gamma': 'γ',
-        '\\Gamma': 'Γ',
-        '\\delta': 'δ',
-        '\\epsilon': 'ε',
-        '\\theta': 'θ',
-        '\\mu': 'μ',
-        '\\sigma': 'σ',
-        '\\nu': 'ν',
-        '\\pi': 'π',
-        '\\Phi': 'Φ',
-        '\\le': '≤',
-        '\\leq': '≤',
-        '\\ge': '≥',
-        '\\geq': '≥',
-        '\\infty': '∞',
-        '\\approx': '≈',
-        '\\to': '→',
-        '\\implies': '⇒',
-        '\\Pr': 'Pr',
-        '\\mathbb{R}': 'ℝ',
-        '\\mathcal{N}': 'N',
-        '\\hat{\\mu}': 'μ-hat',
-        '\\hat{\\sigma}': 'σ-hat',
-        '\\hat{\\nu}': 'ν-hat',
-        '\\hat{s}': 's-hat',
-        '\\text{VaR}': 'VaR',
-        '\\text{Normal}': 'Normal',
-        '\\text{Student-t}': 'Student-t',
-        '\\text{model}': 'model',
-        '\\text{fitted}': 'fitted',
-        '\\text{a.s.}': 'a.s.',
-        '\\dots': '...',
-        '\\cdot': '·',
-        '\\,': ' ',
-        '\\;': ' ',
-        '\\quad': '  ',
-        '\\{': '{',
-        '\\}': '}',
-        '\\in': '∈',
-        '\\ne': '≠',
-        '\\neq': '≠',
-        '\\times': '×',
-        '\\sqrt{\\pi \\nu}': '√(π * ν)',
-        '\\sqrt{2\\pi}': '√(2π)',
-        '\\sqrt': '√',
-    }
-    
-    for key, value in replacements.items():
+    for key, value in replacements:
         formula = formula.replace(key, value)
         
-    # Clean up any leftover LaTeX commands
+    # Remove remaining backslashes for formatting
     formula = re.sub(r'\\([a-zA-Z]+)', r'\1', formula)
-    # Format subscripts/superscripts to be cleaner in plain text
-    formula = re.sub(r'_(?:\\)?\{([^{}]+)\}', r'_\1', formula)
-    formula = re.sub(r'\^(?:\\)?\{([^{}]+)\}', r'^\1', formula)
     
     return formula.strip()
 
